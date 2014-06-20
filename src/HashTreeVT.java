@@ -9,10 +9,8 @@ public class HashTreeVT {
 	private Node root;
 
 	public HashTreeVT(byte[] field, int blockSize) {
-		root = buildHashTree(field, blockSize);
+		root = buildHashTree(getLeafNodes(field, blockSize));
 	}
-
-
 
 	private abstract class Node {
 		byte[] hash;
@@ -102,13 +100,29 @@ public class HashTreeVT {
 		return (int) (Math.log(numberOfNodes) / Math.log(2));
 	}
 
-	//Baut den Baum auf
-	
-	private Node buildHashTree(byte[] field, int blockSize) {
-		
-		ArrayList<Node> nodes = getLeafNodes(field, blockSize);
+	// Baut den Baum auf
 
-		return null;
+	private Node buildHashTree(ArrayList<Node> nodes) {
+		
+		if(nodes.size() == 1){
+			return nodes.get(0);
+		}
+
+		ArrayList<Node> parentNodes = new ArrayList<>();
+		
+		if((nodes.size() % 2) != 0){
+			nodes.add(new LeafNode(new byte[0]));
+		}
+
+		for (int i = 1; i < nodes.size(); i += 2) {
+
+			parentNodes.add(new InnerNode(nodes.get(i - 1), nodes.get(i)));
+
+		}
+
+		
+		
+		return buildHashTree(parentNodes);
 	}
 
 	/*
@@ -128,10 +142,6 @@ public class HashTreeVT {
 			System.arraycopy(field, position, help, 0, blockSize);
 			leafNodes.add(new LeafNode(help));
 			position += blockSize;
-		}
-
-		if ((leafNodes.size() % 2) != 0) {
-			leafNodes.add(new LeafNode(new byte[blockSize]));
 		}
 
 		return leafNodes;
