@@ -5,20 +5,26 @@ public class moin {
 
 	public static void main(String[] args) {
 
-		Random random = new Random();
-		byte[] data = new byte[150];
+		byte[] data = new byte[17];
 		for (int i = 0; i < data.length; i++) {
-			data[i] = (byte) random.nextInt();
+			data[i] = (byte) i;
 		}
 
 		System.out.println("Generated data:");
 		System.out.println(Arrays.toString(data));
 
-		HashTree ht = new HashTree(data, 30);
+		HashTreeVT ht = new HashTreeVT(data, 3);
+		
 
 		System.out.println("HashTreeData: ");
 		ht.display();
+		
+		
 
 	}
+	
+	
+
+	
 
 }
