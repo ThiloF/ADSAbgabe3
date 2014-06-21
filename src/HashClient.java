@@ -94,7 +94,6 @@ public class HashClient {
 		}
 		return array;
 	}
-
 	
 	//Hashes verketten
 	
