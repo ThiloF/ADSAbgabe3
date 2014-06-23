@@ -23,9 +23,9 @@ public class HashTreeVT {
 	}
 
 	private abstract class Node {
-		byte[] hash;
+		Hash hash;
 
-		public Node(byte[] hash) {
+		public Node(Hash hash) {
 			this.hash = hash;
 		}
 	}
@@ -36,7 +36,7 @@ public class HashTreeVT {
 		Node right;
 
 		public InnerNode(Node leftChild, Node rightChild) {
-			super(ADSTool.sha1(chainHashs(leftChild.hash, (rightChild == null) ? null : rightChild.hash)));
+			super(leftChild.hash.chainedTo((rightChild == null) ? null : rightChild.hash));
 			this.left = leftChild;
 			this.right = rightChild;
 		}
@@ -46,7 +46,7 @@ public class HashTreeVT {
 		byte[] data; // array für die Datenblöcke
 
 		public LeafNode(byte[] blocks) {
-			super(ADSTool.sha1(blocks));
+			super(new Hash(ADSTool.sha1(blocks)));
 			this.data = blocks;
 		}
 	}
@@ -138,10 +138,7 @@ public class HashTreeVT {
 		System.out.format("%2s ", path);
 		System.out.format("%-3s  ", s);
 		// System.out.println(ADSTool.byteArrayToHexString(node.hash));
-		for (byte b : node.hash) {
-			System.out.print(ADSTool.byteArrayToHexString(new byte[] { b }) + " ");
-		}
-		System.out.println();
+		System.out.println(node.hash.toString());
 		if (node instanceof InnerNode) {
 
 			InnerNode nodeInner = (InnerNode) node;

@@ -1,11 +1,12 @@
+import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import de.medieninf.ads.ADSTool;
 
 public class HashClient {
 
 	private String url;
+	private static Hash correctHash = new Hash(new byte[] { (byte) 0x9e, 0x06, (byte) 0xf5, 0x76, 0x53, (byte) 0xd2, 0x7e, (byte) 0xc4, 0x5e, 0x25, (byte) 0xbf, 0x03, (byte) 0xaf, (byte) 0x9d, (byte) 0x82, (byte) 0x86, (byte) 0xd7, 0x0a, (byte) 0xab, (byte) 0xa8 });
 
 	public HashClient(String url) {
 		this.url = url;
@@ -15,49 +16,59 @@ public class HashClient {
 
 		int noBlocks = ADSTool.toInt(ADSTool.getURLBytes(url + "noblocks"));
 		String[] path = getPaths(noBlocks);
-		System.out.println(Arrays.toString(getPaths(noBlocks)));
+		ArrayList<byte[]> datas = new ArrayList<>();
+		int size = 0;
 
-		for(int i = 0; i < path.length; i++){
-		
-		byte[] leaf = ADSTool.getURLBytes(url + path[9]); // Blätter
-		byte[] dataBlocks = new byte[leaf.length - (getLevels(noBlocks) * 20)]; // Datenblock
-		System.arraycopy(leaf, getLevels(noBlocks) * 20, dataBlocks, 0, dataBlocks.length); // Datenblock
-																							// kopieren
+		for (int i = 0; i < path.length; i++) {
 
-		
-		ArrayList<byte[]> neighbours = getNeighbours(leaf, getLevels(noBlocks));
-		
+			byte[] leaf = ADSTool.getURLBytes(url + path[i]); // Blätter
+			int offset = getLevels(noBlocks) * 20;
+			byte[] dataBlocks = new byte[leaf.length - offset]; // Datenblock
+			System.arraycopy(leaf, offset, dataBlocks, 0, dataBlocks.length); // Datenblock
+																				// kopieren
 
-		
+			ArrayList<Hash> neighbours = getNeighbours(leaf, getLevels(noBlocks));
 
-		byte[] hash = getRoot(neighbours, ADSTool.sha1(dataBlocks), path[i]);
+			Hash hash = getRootHash(neighbours, new Hash(ADSTool.sha1(dataBlocks)), path[i]);
 
-		System.out.println("Wurzel: ");
-		for (byte b : hash) {
-			System.out.print(ADSTool.byteArrayToHexString(new byte[] { b }) + " ");
+			System.out.println("Wurzel " + i + ": " + hash.toString());
+
+			if (!hash.equals(correctHash)) {
+				i--;
+				System.out.println("Falsch. Versuche erneut...");
+			} else {
+				datas.add(dataBlocks);
+				size += dataBlocks.length;
+			}
+
 		}
-		
+
+		byte[] data = new byte[size];
+		int offset = 0;
+		for (byte[] d : datas) {
+			System.arraycopy(d, 0, data, offset, d.length);
+			offset += d.length;
 		}
+
+		System.out.println(data.length);
+		ADSTool.saveByteArray("datei2.png", data);
 
 	}
-	
-	//Wurzel berechnen
-	
-	private byte[] getRoot(ArrayList<byte[] > neighbours, byte[] dataBlocks, String path){
-		byte[] hash = dataBlocks;
-		
-		
-		
+
+	// Wurzel berechnen
+	private Hash getRootHash(ArrayList<Hash> neighbours, Hash dataHash, String path) {
+		Hash hash = dataHash;
+
 		for (int i = 0; i < neighbours.size(); i++) {
-			char c = path.charAt(i);
-			if(c == 0){
-			hash = ADSTool.sha1(chainHashs(hash, neighbours.get(i)));
-			}else{
-			hash = ADSTool.sha1(chainHashs(neighbours.get(i), hash));	
+			char c = path.charAt(neighbours.size() - i - 1);
+			if (c == '0') {
+				hash = hash.chainedTo(neighbours.get(i));
+			} else {
+				hash = neighbours.get(i).chainedTo(hash);
 			}
-			
+
 		}
-		
+
 		return hash;
 	}
 
@@ -69,7 +80,7 @@ public class HashClient {
 		return i;
 	}
 
-	//Pfad berechenen
+	// Pfad berechenen
 	private String[] getPaths(int noBlocks) {
 		String[] a = new String[noBlocks];
 		int depth = getLevels(noBlocks);
@@ -80,37 +91,16 @@ public class HashClient {
 		return a;
 	}
 
-	
-	//Nachbarknoten extrahieren  
-	public static ArrayList<byte[]> getNeighbours(byte[] field, int levels) {
+	// Nachbarknoten extrahieren
+	public static ArrayList<Hash> getNeighbours(byte[] field, int levels) {
 
-		ArrayList<byte[]> array = new ArrayList<>();
-		int start = 0;
+		ArrayList<Hash> array = new ArrayList<>();
 		for (int i = 0; i < levels; i++) {
 			byte[] help = new byte[20];
-			System.arraycopy(field, start, help, 0, 20);
-			start += 20;
-			array.add(help);
+			System.arraycopy(field, i * 20, help, 0, 20);
+			array.add(new Hash(help));
 		}
 		return array;
-	}
-	
-	//Hashes verketten
-	
-	private byte[] chainHashs(byte[] hash1, byte[] hash2) {
-
-		if (hash2 == null) {
-			byte[] zeros = new byte[hash1.length];
-			hash2 = zeros;
-		}
-
-		byte[] hash = new byte[hash1.length + hash2.length];
-
-		System.arraycopy(hash1, 0, hash, 0, hash1.length);
-		System.arraycopy(hash2, 0, hash, hash1.length, hash2.length);
-
-		return hash;
-
 	}
 
 }

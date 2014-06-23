@@ -1,5 +1,4 @@
 import java.util.Arrays;
-import java.util.Random;
 
 public class moin {
 
@@ -18,6 +17,8 @@ public class moin {
 
 		System.out.println("HashTreeData: ");
 		ht.display();
+		
+		System.out.println();
 		
 		HashClient client = new HashClient("http://login3.mi.hs-rm.de:8097/");
 		client.initConnection();
