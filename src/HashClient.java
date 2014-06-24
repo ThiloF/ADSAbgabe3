@@ -24,6 +24,7 @@ public class HashClient {
 			byte[] leaf = ADSTool.getURLBytes(url + path[i]); // Blätter
 			int offset = getLevels(noBlocks) * 20;
 			byte[] dataBlocks = new byte[leaf.length - offset]; // Datenblock
+			int blocksize = dataBlocks.length;
 			System.arraycopy(leaf, offset, dataBlocks, 0, dataBlocks.length); // Datenblock
 																				// kopieren
 
@@ -37,21 +38,15 @@ public class HashClient {
 				i--;
 				System.out.println("Falsch. Versuche erneut...");
 			} else {
+			
 				datas.add(dataBlocks);
 				size += dataBlocks.length;
+				
 			}
 
 		}
-
-		byte[] data = new byte[size];
-		int offset = 0;
-		for (byte[] d : datas) {
-			System.arraycopy(d, 0, data, offset, d.length);
-			offset += d.length;
-		}
-
-		System.out.println(data.length);
-		ADSTool.saveByteArray("datei2.png", data);
+		
+		      write(datas, size);
 
 	}
 
@@ -101,6 +96,20 @@ public class HashClient {
 			array.add(new Hash(help));
 		}
 		return array;
+	}
+	
+	private void write(ArrayList<byte[]> datas, int size){
+		byte[] stream = new byte[size];
+		
+		int offset = 0;
+        for(byte[] b: datas){
+        	System.arraycopy(b, 0, stream, offset, b.length);
+        	offset += b.length;
+        }
+		
+		
+		ADSTool.saveByteArray("wasser.png", ADSTool.depad(stream));
+		
 	}
 
 }
