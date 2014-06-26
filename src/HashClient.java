@@ -1,4 +1,3 @@
-import java.io.Writer;
 import java.util.ArrayList;
 
 import de.medieninf.ads.ADSTool;
@@ -24,7 +23,6 @@ public class HashClient {
 			byte[] leaf = ADSTool.getURLBytes(url + path[i]); // Blätter
 			int offset = getLevels(noBlocks) * 20;
 			byte[] dataBlocks = new byte[leaf.length - offset]; // Datenblock
-			int blocksize = dataBlocks.length;
 			System.arraycopy(leaf, offset, dataBlocks, 0, dataBlocks.length); // Datenblock
 																				// kopieren
 

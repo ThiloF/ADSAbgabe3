@@ -1,83 +1,183 @@
-import java.util.Arrays;
+import java.util.ArrayList;
 
 import de.medieninf.ads.ADSTool;
 
 public class HashTree {
 
-	private abstract class Node {
-		public byte[] hash; // 20 byte hash
-	}
-
-	private class NodeInner extends Node {
-		public Node left, right; // Unterknoten
-	}
-
-	private class NodeLeaf extends Node {
-		public byte[] data; // Daten
-	}
-
-	private static byte[] nullHash = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
 	private Node root;
+	private int blocksize;
+	private int fieldlength;
+	private int noblocks;
 
-	public HashTree(byte[] data, int blocksize) {
-
-		int blocks = (int) Math.ceil((double) data.length / blocksize);
-		NodeLeaf[] nodes = new NodeLeaf[blocks];
-
-		for (int i = 0; i < blocks; i++) {
-			byte[] d = new byte[blocksize];
-			System.arraycopy(data, i * blocksize, d, 0, blocksize);
-			NodeLeaf n = new NodeLeaf();
-			n.data = d;
-			n.hash = ADSTool.sha1(d);
-			nodes[i] = n;
-		}
-
-		this.root = getRootNode(nodes);
-
+	public HashTree(byte[] field, int blockSize) {
+		this.noblocks = (int) Math.ceil((double) field.length / blockSize);
+		byte[] field2 = new byte[noblocks * blockSize];
+		System.arraycopy(field, 0, field2, 0, field.length);
+		root = buildHashTree(getLeafNodes(field2, blockSize));
+		this.blocksize = blockSize;
+		this.fieldlength = field.length;
 	}
 
-	private Node getRootNode(Node[] nodes) {
-		return compactNodes(nodes)[0];
+	public Node getRoot() {
+		return root;
 	}
 
-	private Node[] compactNodes(Node[] nodes) {
+	private abstract class Node {
+		Hash hash;
 
-		// Abbruchbedingung
-		if (nodes.length <= 1) return nodes;
+		public Node(Hash hash) {
+			this.hash = hash;
+		}
+	}
 
-		Node[] newNodes = new Node[(int) Math.ceil(nodes.length / 2d)];
-		for (int i = 0; i < newNodes.length; i++) {
-			NodeInner node = new NodeInner();
-			int index2 = 2 * i + 1;
-			node.left = nodes[2 * i];
-			node.right = (index2 >= nodes.length) ? null : nodes[2 * i + 1];
-			byte[] concat = new byte[node.left.hash.length * 2];
-			System.arraycopy(node.left.hash, 0, concat, 0, node.left.hash.length);
-			System.arraycopy((index2 >= nodes.length) ? nullHash : node.right.hash, 0, concat, node.left.hash.length, node.left.hash.length);
-			node.hash = ADSTool.sha1(concat);
-			newNodes[i] = node;
+	private class InnerNode extends Node {
+
+		Node left;
+		Node right;
+
+		public InnerNode(Node leftChild, Node rightChild) {
+			super(leftChild.hash.chainedTo((rightChild == null) ? null : rightChild.hash));
+			this.left = leftChild;
+			this.right = rightChild;
+		}
+	}
+
+	private class LeafNode extends Node {
+		byte[] data; // array für die Datenblöcke
+
+		public LeafNode(byte[] blocks) {
+			super(new Hash(ADSTool.sha1(blocks)));
+			this.data = blocks;
+		}
+	}
+
+	// gibt die Höhe des Baumes zurück
+
+	private int getLevels(int numberOfNodes) {
+		int i = 0;
+		for (int j = 1; j < numberOfNodes; i++, j *= 2)
+			;
+		return i;
+	}
+
+	// Baut den Baum auf
+
+	private Node buildHashTree(ArrayList<Node> nodes) {
+
+		if (nodes.size() == 1) {
+			return nodes.get(0);
 		}
 
-		return compactNodes(newNodes);
+		ArrayList<Node> parentNodes = new ArrayList<>();
 
+		if ((nodes.size() % 2) != 0) {
+			nodes.add(null);
+		}
+
+		for (int i = 1; i < nodes.size(); i += 2) {
+
+			parentNodes.add(new InnerNode(nodes.get(i - 1), nodes.get(i)));
+
+		}
+
+		return buildHashTree(parentNodes);
+	}
+
+	/*
+	 * Diese Methode unterteilt das Bytefeld in Blöcke.Diese Blöcke werden dann
+	 * in Blattkonten verpackt.Sollte dabei eine ungerade anzahlahl an
+	 * Bytblöckenkommen, fügt er einen leeres Blatt hinzu
+	 */
+
+	private ArrayList<Node> getLeafNodes(byte[] field, int blockSize) {
+		ArrayList<Node> leafNodes = new ArrayList<>();
+
+		int position = 0;
+
+		for (int i = 0; i < noblocks; i++) {
+			byte[] help = new byte[blockSize];
+			System.arraycopy(field, position, help, 0, blockSize);
+			leafNodes.add(new LeafNode(help));
+			position += blockSize;
+		}
+
+		return leafNodes;
 	}
 
 	public void display() {
-		display(root);
+		System.out.print("bytes=" + fieldlength);
+		System.out.print(", blocksize=" + blocksize);
+		System.out.print(", noblocks=" + noblocks);
+		System.out.println(", height=" + getLevels(noblocks));
+		System.out.println(" i Pfad SHA-1 Hash");
+		System.out.println();
+		display(root, "");
 	}
 
-	public void display(Node node) {
-		if (node instanceof NodeLeaf) {
-			NodeLeaf nodeLeaf = (NodeLeaf) node;
-			//System.out.print(bytesToHex(nodeLeaf.hash) + ": ");
-			System.out.println(Arrays.toString(nodeLeaf.data));
-		} else {
-			NodeInner nodeInner = (NodeInner) node;
-			//System.out.println(bytesToHex(nodeInner.hash) + ": inner node");
-			if (nodeInner.left != null) display(nodeInner.left);
-			if (nodeInner.right != null) display(nodeInner.right);
+	private void display(Node node, String s) {
+		String path = "";
+		if (node instanceof LeafNode) {
+			path = String.valueOf(Integer.parseInt(s, 2));
 		}
+		System.out.format("%2s ", path);
+		System.out.format("%-3s  ", s);
+		// System.out.println(ADSTool.byteArrayToHexString(node.hash));
+		System.out.println(node.hash.toString());
+		if (node instanceof InnerNode) {
+
+			InnerNode nodeInner = (InnerNode) node;
+			if (nodeInner.left != null)
+				display(nodeInner.left, s + 0);
+			if (nodeInner.right != null)
+				display(nodeInner.right, s + 1);
+		}
+	}
+
+	public byte[] getTransportBlocks(String path) {
+
+		InnerNode walk = (InnerNode) root;
+
+		ArrayList<Hash> neighbours = new ArrayList<>();
+
+		LeafNode leaf = null;
+
+		for (int i = 0; i < path.length(); i++) {
+			Node needed = null;
+			if (path.charAt(i) == '0') {
+				neighbours.add(walk.right.hash);
+				needed = walk.left;
+			} else {
+				neighbours.add(walk.left.hash);
+				needed = walk.right;
+			}
+			if (needed instanceof InnerNode) {
+				walk = (InnerNode) needed;
+			} else {
+				leaf = (LeafNode) needed;
+			}
+
+		}
+
+		byte[] stream = new byte[neighbours.size() * 20 + blocksize];
+		int offset = 0;
+
+		for (int i = neighbours.size() - 1; i >= 0; i--) {
+			Hash h = neighbours.get(i);
+			System.arraycopy(h.getBytes(), 0, stream, offset, h.length());
+			offset += h.length();
+		}
+
+		if (leaf == null) {
+			leaf = new LeafNode(new byte[]{});
+		}
+
+		//byte[] theData = ADSTool.pad(leaf.data, blocksize);
+		byte[] theData = leaf.data;
+		
+		System.arraycopy(theData, 0, stream, offset, theData.length);
+
+		return stream;
+
 	}
 
 }

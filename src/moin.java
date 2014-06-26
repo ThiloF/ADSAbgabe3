@@ -12,21 +12,20 @@ public class moin {
 		System.out.println("Generated data:");
 		System.out.println(Arrays.toString(data));
 
-		HashTreeVT ht = new HashTreeVT(data, 3);
-		
+		HashTree ht = new HashTree(data, 3);
+		byte[] stream = ht.getTransportBlocks("001");
 
 		System.out.println("HashTreeData: ");
 		ht.display();
-		
+
+		Hash test = new Hash(stream);
+		System.out.println("001 = " + test.toString());
+
 		System.out.println();
-		
+
 		HashClient client = new HashClient("http://login3.mi.hs-rm.de:8097/");
 		client.initConnection();
 
 	}
-	
-	
-
-	
 
 }
