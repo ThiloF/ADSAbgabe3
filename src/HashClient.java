@@ -14,6 +14,7 @@ public class HashClient {
 	public void initConnection() {
 
 		int noBlocks = ADSTool.toInt(ADSTool.getURLBytes(url + "noblocks"));
+		System.out.println("Number of blocks: " + noBlocks);
 		String[] path = getPaths(noBlocks);
 		ArrayList<byte[]> datas = new ArrayList<>();
 		int size = 0;

@@ -84,9 +84,7 @@ public class HashTree {
 	}
 
 	/*
-	 * Diese Methode unterteilt das Bytefeld in Blöcke.Diese Blöcke werden dann
-	 * in Blattkonten verpackt.Sollte dabei eine ungerade anzahlahl an
-	 * Bytblöckenkommen, fügt er einen leeres Blatt hinzu
+	 * Diese Methode unterteilt das Bytefeld in Blöcke.Diese Blöcke werden dann in Blattkonten verpackt.Sollte dabei eine ungerade anzahlahl an Bytblöckenkommen, fügt er einen leeres Blatt hinzu
 	 */
 
 	private ArrayList<Node> getLeafNodes(byte[] field, int blockSize) {
@@ -144,7 +142,8 @@ public class HashTree {
 		for (int i = 0; i < path.length(); i++) {
 			Node needed = null;
 			if (path.charAt(i) == '0') {
-				neighbours.add(walk.right.hash);
+				Hash hash = walk.right == null ? new Hash(new byte[walk.left.hash.length()]) : walk.right.hash;
+				neighbours.add(hash);
 				needed = walk.left;
 			} else {
 				neighbours.add(walk.left.hash);
@@ -171,15 +170,15 @@ public class HashTree {
 			leaf = new LeafNode(new byte[blocksize]);
 		}
 
-		//byte[] theData = ADSTool.pad(leaf.data, blocksize);
+		// byte[] theData = ADSTool.pad(leaf.data, blocksize);
 		byte[] theData = leaf.data;
-		
+
 		System.arraycopy(theData, 0, stream, offset, theData.length);
 
-		return ADSTool.pad(stream, blocksize);
+		return stream;
 
 	}
-	
+
 	public int getNoBlocks() {
 		return noblocks;
 	}

@@ -28,6 +28,7 @@ public class HashServer implements OfferBytes {
 			System.exit(-1);
 		}
 
+		System.out.println("Starting server with file " + filename + ", blocksize " + blocksize + " and errorquote " + errorquote + "/1000");
 		HashServer server = new HashServer(filename, blocksize, errorquote);
 		ServeBytes thingy = new ServeBytes(server);
 		thingy.serve();
@@ -36,10 +37,10 @@ public class HashServer implements OfferBytes {
 
 	public HashServer(String file, int blocksize, int errorquote) {
 
-		byte[] bytes = ADSTool.readByteArray(file);
+		byte[] bytes = ADSTool.pad(ADSTool.readByteArray(file), blocksize);
 
 		this.ht = new HashTree(bytes, blocksize);
-		//this.ht.display();
+		// this.ht.display();
 		this.errorquote = errorquote;
 		this.blocksize = blocksize;
 
@@ -48,10 +49,7 @@ public class HashServer implements OfferBytes {
 	@Override
 	public byte[] get(String path) {
 		if (path.equals("noblocks")) {
-			ByteBuffer b = ByteBuffer.allocate(4);
-			b.putInt(ht.getNoBlocks());
-			b.flip();
-			return b.array();
+			return ByteBuffer.allocate(4).putInt(ht.getNoBlocks()).array();
 		} else {
 			if (random.nextInt(1000) < errorquote) {
 				byte[] randoms = new byte[blocksize + 20 * path.length()];
