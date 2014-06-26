@@ -18,6 +18,7 @@ public class HashClient {
 		ArrayList<byte[]> datas = new ArrayList<>();
 		int size = 0;
 
+		int errors = 0;
 		for (int i = 0; i < path.length; i++) {
 
 			byte[] leaf = ADSTool.getURLBytes(url + path[i]); // Blätter
@@ -33,18 +34,24 @@ public class HashClient {
 			System.out.println("Wurzel " + i + ": " + hash.toString());
 
 			if (!hash.equals(correctHash)) {
+				if (errors > 9) {
+					System.out.println("Paket über 9 mal falsch angekommen. Abbruch...");
+					return;
+				}
 				i--;
+				errors++;
 				System.out.println("Falsch. Versuche erneut...");
 			} else {
-			
+
 				datas.add(dataBlocks);
 				size += dataBlocks.length;
-				
+				errors = 0;
+
 			}
 
 		}
-		
-		      write(datas, size);
+
+		write(datas, size);
 
 	}
 
@@ -95,19 +102,18 @@ public class HashClient {
 		}
 		return array;
 	}
-	
-	private void write(ArrayList<byte[]> datas, int size){
+
+	private void write(ArrayList<byte[]> datas, int size) {
 		byte[] stream = new byte[size];
-		
+
 		int offset = 0;
-        for(byte[] b: datas){
-        	System.arraycopy(b, 0, stream, offset, b.length);
-        	offset += b.length;
-        }
-		
-		
-		ADSTool.saveByteArray("wasser.png", ADSTool.depad(stream));
-		
+		for (byte[] b : datas) {
+			System.arraycopy(b, 0, stream, offset, b.length);
+			offset += b.length;
+		}
+
+		ADSTool.saveByteArray("wasser3.png", ADSTool.depad(stream));
+
 	}
 
 }

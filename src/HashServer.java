@@ -1,7 +1,9 @@
+import java.nio.ByteBuffer;
 import java.util.Random;
 
 import de.medieninf.ads.ADSTool;
 import de.medieninf.ads.ADSTool.OfferBytes;
+import de.medieninf.ads.ADSTool.ServeBytes;
 
 public class HashServer implements OfferBytes {
 
@@ -11,8 +13,24 @@ public class HashServer implements OfferBytes {
 
 	public static void main(String[] args) {
 
-		// TODO Einlesen: Dateiname, Blöcklänge, Fehlerrate in Promille
-		// TODO Instanz von HashServer erstellen
+		if (args.length != 3) {
+			System.err.println("Verwendung: <Eingabedatei> <Blocklänge> <Fehlerquote in Promille>");
+			System.exit(-1);
+		}
+
+		String filename = args[0];
+		int blocksize = 0, errorquote = 0;
+		try {
+			blocksize = Integer.parseInt(args[1]);
+			errorquote = Integer.parseInt(args[2]);
+		} catch (NumberFormatException e) {
+			System.err.println("Blocklänge und Fehlerpromille müssen Ganzzahlwerte enthalten!");
+			System.exit(-1);
+		}
+
+		HashServer server = new HashServer(filename, blocksize, errorquote);
+		ServeBytes thingy = new ServeBytes(server);
+		thingy.serve();
 
 	}
 
@@ -21,6 +39,7 @@ public class HashServer implements OfferBytes {
 		byte[] bytes = ADSTool.readByteArray(file);
 
 		this.ht = new HashTree(bytes, blocksize);
+		//this.ht.display();
 		this.errorquote = errorquote;
 		this.blocksize = blocksize;
 
@@ -28,12 +47,19 @@ public class HashServer implements OfferBytes {
 
 	@Override
 	public byte[] get(String path) {
-		if (random.nextInt(1000) < errorquote) {
-			byte[] randoms = new byte[blocksize + 20 * path.length()];
-			random.nextBytes(randoms);
-			return randoms;
+		if (path.equals("noblocks")) {
+			ByteBuffer b = ByteBuffer.allocate(4);
+			b.putInt(ht.getNoBlocks());
+			b.flip();
+			return b.array();
+		} else {
+			if (random.nextInt(1000) < errorquote) {
+				byte[] randoms = new byte[blocksize + 20 * path.length()];
+				random.nextBytes(randoms);
+				return randoms;
+			}
+			return ht.getTransportBlocks(path);
 		}
-		return ht.getTransportBlocks(path);
 	}
 
 }

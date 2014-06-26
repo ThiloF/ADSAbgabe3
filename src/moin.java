@@ -1,4 +1,3 @@
-import java.util.Arrays;
 
 public class moin {
 
@@ -8,9 +7,6 @@ public class moin {
 		for (int i = 0; i < data.length; i++) {
 			data[i] = (byte) i;
 		}
-
-		System.out.println("Generated data:");
-		System.out.println(Arrays.toString(data));
 
 		HashTree ht = new HashTree(data, 3);
 		byte[] stream = ht.getTransportBlocks("001");
@@ -23,7 +19,7 @@ public class moin {
 
 		System.out.println();
 
-		HashClient client = new HashClient("http://login3.mi.hs-rm.de:8097/");
+		HashClient client = new HashClient("http://localhost:8097/");
 		client.initConnection();
 
 	}

@@ -168,7 +168,7 @@ public class HashTree {
 		}
 
 		if (leaf == null) {
-			leaf = new LeafNode(new byte[]{});
+			leaf = new LeafNode(new byte[blocksize]);
 		}
 
 		//byte[] theData = ADSTool.pad(leaf.data, blocksize);
@@ -176,8 +176,12 @@ public class HashTree {
 		
 		System.arraycopy(theData, 0, stream, offset, theData.length);
 
-		return stream;
+		return ADSTool.pad(stream, blocksize);
 
+	}
+	
+	public int getNoBlocks() {
+		return noblocks;
 	}
 
 }
