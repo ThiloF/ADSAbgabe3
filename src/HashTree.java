@@ -1,3 +1,6 @@
+/**
+ * @author Thilo Falkenstein (877699), Felix König (577751)
+ */
 import java.util.ArrayList;
 
 import de.medieninf.ads.ADSTool;
@@ -15,7 +18,7 @@ public class HashTree {
 		System.arraycopy(field, 0, field2, 0, field.length);
 		root = buildHashTree(getLeafNodes(field2, blockSize));
 		this.blocksize = blockSize;
-		this.fieldlength = field.length;
+		this.fieldlength = field2.length;
 	}
 
 	public Node getRoot() {
@@ -52,7 +55,6 @@ public class HashTree {
 	}
 
 	// gibt die Höhe des Baumes zurück
-
 	private int getLevels(int numberOfNodes) {
 		int i = 0;
 		for (int j = 1; j < numberOfNodes; i++, j *= 2)
@@ -61,7 +63,6 @@ public class HashTree {
 	}
 
 	// Baut den Baum auf
-
 	private Node buildHashTree(ArrayList<Node> nodes) {
 
 		if (nodes.size() == 1) {
@@ -75,18 +76,14 @@ public class HashTree {
 		}
 
 		for (int i = 1; i < nodes.size(); i += 2) {
-
 			parentNodes.add(new InnerNode(nodes.get(i - 1), nodes.get(i)));
-
 		}
 
 		return buildHashTree(parentNodes);
 	}
 
-	/*
-	 * Diese Methode unterteilt das Bytefeld in Blöcke.Diese Blöcke werden dann in Blattkonten verpackt.Sollte dabei eine ungerade anzahlahl an Bytblöckenkommen, fügt er einen leeres Blatt hinzu
-	 */
-
+	// Diese Methode unterteilt das Bytefeld in Blöcke.
+	// Diese Blöcke werden dann in Blattknoten verpackt.
 	private ArrayList<Node> getLeafNodes(byte[] field, int blockSize) {
 		ArrayList<Node> leafNodes = new ArrayList<>();
 
@@ -107,7 +104,7 @@ public class HashTree {
 		System.out.print(", blocksize=" + blocksize);
 		System.out.print(", noblocks=" + noblocks);
 		System.out.println(", height=" + getLevels(noblocks));
-		System.out.println(" i Pfad SHA-1 Hash");
+		System.out.println(" i  Pfad    SHA-1 Hash");
 		System.out.println();
 		display(root, "");
 	}
@@ -117,12 +114,11 @@ public class HashTree {
 		if (node instanceof LeafNode) {
 			path = String.valueOf(Integer.parseInt(s, 2));
 		}
-		System.out.format("%2s ", path);
-		System.out.format("%-3s  ", s);
-		// System.out.println(ADSTool.byteArrayToHexString(node.hash));
+		System.out.format("%3s ", path);
+		System.out.format("%-6s  ", s);
 		System.out.println(node.hash.toString());
+		// Geht durch alle Knoten rekursiv
 		if (node instanceof InnerNode) {
-
 			InnerNode nodeInner = (InnerNode) node;
 			if (nodeInner.left != null)
 				display(nodeInner.left, s + 0);
@@ -134,11 +130,11 @@ public class HashTree {
 	public byte[] getTransportBlocks(String path) {
 
 		InnerNode walk = (InnerNode) root;
-
 		ArrayList<Hash> neighbours = new ArrayList<>();
-
 		LeafNode leaf = null;
 
+		// Iteriert von der Wurzel bis zum Blatt
+		// Merkt sich alle Schwesterhashes auf dem Weg
 		for (int i = 0; i < path.length(); i++) {
 			Node needed = null;
 			if (path.charAt(i) == '0') {
@@ -170,10 +166,7 @@ public class HashTree {
 			leaf = new LeafNode(new byte[blocksize]);
 		}
 
-		// byte[] theData = ADSTool.pad(leaf.data, blocksize);
-		byte[] theData = leaf.data;
-
-		System.arraycopy(theData, 0, stream, offset, theData.length);
+		System.arraycopy(leaf.data, 0, stream, offset, leaf.data.length);
 
 		return stream;
 

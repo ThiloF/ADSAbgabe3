@@ -1,17 +1,22 @@
+/**
+ * @author Thilo Falkenstein (877699), Felix König (577751)
+ */
 import java.util.ArrayList;
 
 import de.medieninf.ads.ADSTool;
 
 public class HashClient {
 
-	private String url;
-	private static Hash correctHash = new Hash(new byte[] { (byte) 0x9e, 0x06, (byte) 0xf5, 0x76, 0x53, (byte) 0xd2, 0x7e, (byte) 0xc4, 0x5e, 0x25, (byte) 0xbf, 0x03, (byte) 0xaf, (byte) 0x9d, (byte) 0x82, (byte) 0x86, (byte) 0xd7, 0x0a, (byte) 0xab, (byte) 0xa8 });
+	private String url, outputfile;
+	private Hash rootHash;
 
-	public HashClient(String url) {
+	public HashClient(String url, String outputfile, Hash rootHash) {
 		this.url = url;
+		this.outputfile = outputfile;
+		this.rootHash = rootHash;
 	}
 
-	public void initConnection() {
+	public void query() {
 
 		int noBlocks = ADSTool.toInt(ADSTool.getURLBytes(url + "noblocks"));
 		System.out.println("Number of blocks: " + noBlocks);
@@ -34,7 +39,7 @@ public class HashClient {
 
 			System.out.println("Wurzel " + i + ": " + hash.toString());
 
-			if (!hash.equals(correctHash)) {
+			if (!hash.equals(rootHash)) {
 				if (errors > 9) {
 					System.out.println("Paket über 9 mal falsch angekommen. Abbruch...");
 					return;
@@ -113,7 +118,7 @@ public class HashClient {
 			offset += b.length;
 		}
 
-		ADSTool.saveByteArray("wasser3.png", ADSTool.depad(stream));
+		ADSTool.saveByteArray(outputfile, ADSTool.depad(stream));
 
 	}
 
